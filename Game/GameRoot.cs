@@ -12,13 +12,13 @@ namespace GameProject {
     public class GameRoot : Game {
         public GameRoot() {
             _graphics = new GraphicsDeviceManager(this);
-            _graphics.SynchronizeWithVerticalRetrace = false;
+            // _graphics.SynchronizeWithVerticalRetrace = false;
             IsMouseVisible = true;
             Content.RootDirectory = "Content";
         }
 
         protected override void Initialize() {
-            IsFixedTimeStep = false;
+            // IsFixedTimeStep = false;
             Window.AllowUserResizing = true;
             Window.ClientSizeChanged += WindowSizeChanged;
 
@@ -61,16 +61,21 @@ namespace GameProject {
                 }
             }
 
+            if (_resetFPS.Pressed()) _fps.DroppedFrames = 0;
+            _fps.Update(gameTime);
+
             InputHelper.UpdateCleanup();
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime) {
             GraphicsDevice.Clear(Color.Black);
+            _fps.Draw(gameTime);
 
-            var font = _fontSystem.GetFont(30);
+            var font = _fontSystem.GetFont(24);
             _s.Begin();
             _s.DrawString(font, $"{(int)gameTime.TotalGameTime.TotalMilliseconds}", new Vector2(10, 10), Color.White);
+            _s.DrawString(font, $"fps: {_fps.FramesPerSecond} - Dropped Frames: {_fps.DroppedFrames} - Draw ms: {_fps.TimePerFrame} - Update ms: {_fps.TimePerUpdate}", new Vector2(10, 50), Color.White);
             _s.DrawString(font, $"{_graphics.PreferredBackBufferWidth}, {_graphics.PreferredBackBufferHeight}", new Vector2(10, 100), Color.White);
             _s.End();
 
@@ -95,10 +100,8 @@ namespace GameProject {
                     _graphics.ApplyChanges();
                     Window.Position = p;
                     WindowSizeChanged(this, EventArgs.Empty);
-                    if (_started) this.Tick();
                     break;
                 case SDL_WindowEventID.SDL_WINDOWEVENT_MOVED:
-                    if (_started) this.Tick();
                     break;
                 case SDL_WindowEventID.SDL_WINDOWEVENT_MAXIMIZED:
                     _isMaximized = true;
@@ -134,6 +137,7 @@ namespace GameProject {
                 new GamePadCondition(GamePadButton.Back, 0)
             );
         ICondition _toggleMaximize = new KeyboardCondition(Keys.M);
+        ICondition _resetFPS = new KeyboardCondition(Keys.R);
 
         FontSystem _fontSystem = null!;
 
@@ -148,5 +152,7 @@ namespace GameProject {
 
         int _manualTickCount = 0;
         bool _manualTick;
+
+        FPSCounter _fps = new FPSCounter();
     }
 }
