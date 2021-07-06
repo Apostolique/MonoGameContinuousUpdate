@@ -6,6 +6,7 @@ using FontStashSharp;
 using SDL2;
 using static SDL2.SDL;
 using System;
+using System.Runtime.InteropServices;
 
 namespace GameProject {
     public class GameRoot : Game {
@@ -25,9 +26,10 @@ namespace GameProject {
 
             _filter = new SDL_EventFilter(HandleSDLEvent);
             SDL_AddEventWatch(_filter, IntPtr.Zero);
+            // SDL_SetEventFilter(_filter, IntPtr.Zero);
 
-            // _callback = new SDL_TimerCallback(PushEvent);
-            // _handle = new IntPtr(SDL_AddTimer(1, _callback, IntPtr.Zero));
+            _timerProc = BackupTick;
+            _handle = SetTimer(IntPtr.Zero, IntPtr.Zero, 1, _timerProc);
 
             base.Initialize();
         }
@@ -43,6 +45,10 @@ namespace GameProject {
 
         protected override void Update(GameTime gameTime) {
             _started = true;
+            if (!_manualTick) {
+                _manualTickCount = 0;
+            }
+
             InputHelper.UpdateSetup();
 
             if (_quit.Pressed()) Exit();
@@ -72,7 +78,7 @@ namespace GameProject {
         }
 
         private void WindowSizeChanged(object? sender, EventArgs e) {
-            Console.WriteLine("Hello");
+            Console.WriteLine("Size change.");
         }
         private unsafe int HandleSDLEvent(IntPtr userdata, IntPtr ptr) {
             SDL_Event* e = (SDL_Event*) ptr;
@@ -102,27 +108,20 @@ namespace GameProject {
                     break;
                 }
                 break;
-            // case SDL_EventType.SDL_USEREVENT:
-            //     Console.WriteLine("User");
-            //     break;
             }
 
             return 0;
         }
-        // private uint PushEvent(uint interval, IntPtr param) {
-        //     SDL_Event e = new SDL_Event();
-        //     SDL_UserEvent userEvent = new SDL_UserEvent();
-
-        //     userEvent.type = (uint)SDL_EventType.SDL_USEREVENT;
-        //     userEvent.code = 0;
-
-        //     e.type = SDL_EventType.SDL_USEREVENT;
-        //     e.user = userEvent;
-
-        //     SDL_PushEvent(ref e);
-
-        //     return 1;
-        // }
+        private void BackupTick(IntPtr hWnd, uint uMsg, IntPtr nIDEvent, uint dwTime) {
+            if (_started) {
+                if (_manualTickCount > 2) {
+                    _manualTick = true;
+                    this.Tick();
+                    _manualTick = false;
+                }
+                _manualTickCount++;
+            }
+        }
         bool _started = false;
         bool _isMaximized = false;
 
@@ -139,7 +138,15 @@ namespace GameProject {
         FontSystem _fontSystem = null!;
 
         SDL_EventFilter _filter;
-        // IntPtr _handle;
-        // SDL_TimerCallback _callback;
+
+        [DllImport("user32.dll", ExactSpelling=true)]
+        static extern IntPtr SetTimer(IntPtr hWnd, IntPtr nIDEvent, uint uElapse, TimerProc lpTimerFunc);
+        delegate void TimerProc(IntPtr hWnd, uint uMsg, IntPtr nIDEvent, uint dwTime);
+
+        IntPtr _handle;
+        TimerProc _timerProc;
+
+        int _manualTickCount = 0;
+        bool _manualTick;
     }
 }
