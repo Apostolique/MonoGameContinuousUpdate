@@ -1,12 +1,11 @@
+using System;
+using System.Runtime.InteropServices;
+using Apos.Input;
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Apos.Input;
-using FontStashSharp;
-using SDL2;
 using static SDL2.SDL;
-using System;
-using System.Runtime.InteropServices;
 
 namespace GameProject {
     public class GameRoot : Game {
