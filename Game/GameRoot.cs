@@ -128,7 +128,7 @@ namespace GameProject {
         bool _isMaximized = false;
 
         GraphicsDeviceManager _graphics;
-        SpriteBatch _s;
+        SpriteBatch _s = null!;
 
         ICondition _quit =
             new AnyCondition(
@@ -140,14 +140,14 @@ namespace GameProject {
 
         FontSystem _fontSystem = null!;
 
-        SDL_EventFilter _filter;
+        SDL_EventFilter _filter = null!;
 
         [DllImport("user32.dll", ExactSpelling=true)]
         static extern IntPtr SetTimer(IntPtr hWnd, IntPtr nIDEvent, uint uElapse, TimerProc lpTimerFunc);
         delegate void TimerProc(IntPtr hWnd, uint uMsg, IntPtr nIDEvent, uint dwTime);
 
         IntPtr _handle;
-        TimerProc _timerProc;
+        TimerProc _timerProc = null!;
 
         int _manualTickCount = 0;
         bool _manualTick;
